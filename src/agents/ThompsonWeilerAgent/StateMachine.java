@@ -4,13 +4,20 @@ import engine.core.MarioForwardModel;
 import engine.core.MarioTimer;
 
 enum State {
-    RUN, JUMP, WAIT, FIREBALL, RETREAT
+    RUN, JUMP, WAIT, WALK, JUMPBACK, RETREAT
 }
 
 public class StateMachine {
 
     State currentState = State.RUN;
-    int swap = 0;
+    State previousState;
+    boolean groundRun = false;
+    boolean groundWalk = false;
+    boolean jumpBack = false;
+    int groundRunCounter = 0;
+    int groundWalkCounter = 0;
+    int jumpBackCounter = 0;
+    int continuousJumpCounter = 0;
 
     public boolean[] getNextAction(MarioForwardModel model, MarioTimer timer) {
         boolean action[] = new boolean[] {false, false, false, false, false};
@@ -26,6 +33,12 @@ public class StateMachine {
                 break;
             case WAIT:
                 action = new boolean[] {false, false, false, false, false};
+                break;
+            case WALK:
+                action = new boolean[] {false, true, false, false, false};
+                break;
+            case JUMPBACK:
+                action = new boolean[] {true, false, false, true, true};
                 break;
         }
 
@@ -89,20 +102,90 @@ public class StateMachine {
         return false;
     }
 
+    public void checkforJump(int[][] scene, int[][] enemies) {
+        if (enemyInFront(enemies) || thereIsHole(scene) || thereIsObstacle(scene)) {
+            currentState = State.JUMP;
+
+            if (previousState == State.JUMP) {
+                continuousJumpCounter++;
+                if (continuousJumpCounter == 4) {
+                    currentState = State.WAIT;
+                    //jumpBack = true;
+                    continuousJumpCounter = 0;
+                }
+            }
+        }
+    }
+
     public void updateState(MarioForwardModel model, MarioTimer timer) {
         int[][] scene = model.getMarioSceneObservation(1);
         int[][] enemies = model.getMarioEnemiesObservation();
 
-        if (enemyInFront(enemies) || thereIsHole(scene))
-            currentState = State.JUMP;
-        else {
-            if (model.isMarioOnGround())
-                currentState = State.RUN;
+        if (jumpBack) {
+            currentState = State.JUMPBACK;
+            jumpBackCounter++;
+
+            if (jumpBackCounter == 3) {
+                jumpBack = false;
+                jumpBackCounter = 0;
+            }
+
+            return;
         }
 
+        if (groundRun) {
+            currentState = State.RUN;
+            checkforJump(scene, enemies);
+
+            if (currentState == State.RUN) {
+                groundRunCounter++;
+                if (groundRunCounter == 3) {
+                    groundRun = false;
+                    groundRunCounter = 0;
+                }
+            }
+
+            return;
+        }
+
+        if (groundWalk) {
+            currentState = State.WALK;
+            checkforJump(scene, enemies);
+
+            if (currentState == State.WALK) {
+                groundWalkCounter++;
+                if (groundWalkCounter == 9) {
+                    groundWalk = false;
+                    groundWalkCounter = 0;
+                }
+            }
+
+            return;
+        }
+
+        if (model.isMarioOnGround()) {
+            double rand = Math.random();
+            System.out.println(rand);
+            if (rand <= 0.60) {
+                currentState = State.RUN;
+            }
+            else {
+                currentState = State.WALK;
+            }
+        }
+
+        checkforJump(scene, enemies);
+
+        previousState = currentState;
 
         if (currentState == State.RUN)
             System.out.println("Current state is RUN");
+        else if (currentState == State.WAIT)
+            System.out.println("Current state is WAIT");
+        else if (currentState == State.WALK)
+            System.out.println("Current state is WALK");
+        else if (currentState == State.JUMPBACK)
+            System.out.println("Current state is JUMPBACK");
         else
             System.out.println("Current state is JUMP");
 
