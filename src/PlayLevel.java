@@ -35,8 +35,8 @@ public class PlayLevel {
 	MarioGame game = new MarioGame();
 	// printResults(game.playGame(getLevel("levels/original/lvl-1.txt"), 200, 0));
 	for (int i = 1; i < 16; i++) {
-		printResults(game.runGame(new agents.sergeyKarakovskiy.Agent(), getLevel("levels/original/lvl-" + i + ".txt"),
-				20, 0, true));
+		printResults(game.runGame(new agents.ThompsonWeilerAgent.Agent(), getLevel("levels/original/lvl-" + 7 + ".txt"),
+				40, 0, true));
 	}
     }
 }

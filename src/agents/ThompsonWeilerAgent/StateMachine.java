@@ -89,30 +89,17 @@ public class StateMachine {
     }
 
     private boolean piranhaOnScreen(int[][] scene, int[][] enemies) {
-        int piranhaPosY = -2;
-        int pipePosY = -1;
-        boolean inPipe = false;
         for (int i = 0; i < scene.length; i++) {
             for (int j = 0; j < scene[i].length; j++) {
-                if (enemies[i][j] == 8 && scene[i][j] == 34) {
-                    inPipe = true;
-                }
                 if (scene[i][j] == 34) {
-                    pipePosY = j;
-
-                }
-                if (piranhaPosY == pipePosY) {
-                    System.out.println("In the pipe");
-                    inPipe = true;
-                }
-                if (enemies[i][j] == 8 && !inPipe) {
-                    System.out.println("Hello there");
-                    return true;
+                    if (enemies[i][j-1] == 8) {
+                        return true;
+                    }
+                    else if (enemies[i][j] == 8) {
+                        return false;
+                    }
                 }
             }
-            piranhaPosY = 0;
-            pipePosY = -1;
-            inPipe = false;
         }
         return false;
     }
