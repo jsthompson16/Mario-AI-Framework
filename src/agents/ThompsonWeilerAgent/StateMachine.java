@@ -4,7 +4,7 @@ import engine.core.MarioForwardModel;
 import engine.core.MarioTimer;
 
 enum State {
-    RUN, JUMP, WAIT, WALK, JUMPBACK, RETREAT
+    RUN, JUMP, WAIT, WALK, WALKBACK
 }
 
 public class StateMachine {
@@ -13,10 +13,10 @@ public class StateMachine {
     State previousState;
     float currentYPosition;
     float previousYPosition = 0;
-    boolean groundRun = false;
     boolean groundWalk = false;
+    boolean moveBack = false;
+    int moveBackCounter = 0;
     int stuckCounter = 0;
-    int groundRunCounter = 0;
     int groundWalkCounter = 0;
     int continuousJumpCounter = 0;
 
@@ -38,8 +38,8 @@ public class StateMachine {
             case WALK:
                 action = new boolean[] {false, true, false, false, false};
                 break;
-            case JUMPBACK:
-                action = new boolean[] {true, false, false, true, true};
+            case WALKBACK:
+                action = new boolean[] {true, false, false, false, false};
                 break;
         }
 
@@ -94,7 +94,7 @@ public class StateMachine {
 
             if (previousState == State.JUMP) {
                 continuousJumpCounter++;
-                if (continuousJumpCounter == 4) {
+                if (continuousJumpCounter == 8) {
                     currentState = State.WAIT;
                     continuousJumpCounter = 0;
                 }
@@ -109,16 +109,14 @@ public class StateMachine {
 
         currentYPosition = position[1];
 
-        if (groundRun) {
-            currentState = State.RUN;
-            checkforJump(scene, enemies);
+        if (moveBack) {
+            currentState = State.WALKBACK;
+            moveBackCounter++;
 
-            if (currentState == State.RUN) {
-                groundRunCounter++;
-                if (groundRunCounter == 3) {
-                    groundRun = false;
-                    groundRunCounter = 0;
-                }
+            if (moveBackCounter == 5) {
+                moveBack = false;
+                moveBackCounter = 0;
+                currentState = State.JUMP;
             }
 
             return;
@@ -130,11 +128,14 @@ public class StateMachine {
 
             if (currentState == State.WALK) {
                 groundWalkCounter++;
-                if (groundWalkCounter == 6) {
+                if (groundWalkCounter == 3) {
                     groundWalk = false;
                     groundWalkCounter = 0;
                 }
             }
+
+            previousState = currentState;
+            previousYPosition = currentYPosition;
 
             return;
         }
@@ -144,11 +145,10 @@ public class StateMachine {
             System.out.println(rand);
             if (rand <= 0.60) {
                 currentState = State.RUN;
-                //groundRun = true;
             }
             else {
                 currentState = State.WALK;
-                //groundWalk = true;
+                groundWalk = true;
             }
         }
 
@@ -156,9 +156,9 @@ public class StateMachine {
 
         if (previousYPosition != 0 && previousYPosition == currentYPosition && ((previousState == State.WALK) || (previousState == State.RUN))) {
             stuckCounter++;
-            if (stuckCounter == 2) {
-                System.out.println("Hello i am here");
-                currentState = State.JUMP;
+            if (stuckCounter == 10) {
+                moveBack = true;
+                System.out.println("Hello I am stuck");
                 stuckCounter = 0;
             }
         }
@@ -172,8 +172,8 @@ public class StateMachine {
             System.out.println("Current state is WAIT");
         else if (currentState == State.WALK)
             System.out.println("Current state is WALK");
-        else if (currentState == State.JUMPBACK)
-            System.out.println("Current state is JUMPBACK");
+        else if (currentState == State.WALKBACK)
+            System.out.println("Current state is WALKBACK");
         else
             System.out.println("Current state is JUMP");
 
