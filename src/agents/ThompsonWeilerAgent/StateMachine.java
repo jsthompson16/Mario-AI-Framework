@@ -79,7 +79,7 @@ public class StateMachine {
 
     private boolean enemyInFront(int[][] enemies) {
         for (int i = 0; i > -2; i--) {
-            for (int j = 1; j < 4; j++) {
+            for (int j = -2; j < 4; j++) {
                 if (getLocation(j, i, enemies) > 1) {
                     return true;
                 }
@@ -87,6 +87,36 @@ public class StateMachine {
         }
         return false;
     }
+
+    private boolean piranhaOnScreen(int[][] scene, int[][] enemies) {
+        int piranhaPosY = -2;
+        int pipePosY = -1;
+        boolean inPipe = false;
+        for (int i = 0; i < scene.length; i++) {
+            for (int j = 0; j < scene[i].length; j++) {
+                if (enemies[i][j] == 8 && scene[i][j] == 34) {
+                    inPipe = true;
+                }
+                if (scene[i][j] == 34) {
+                    pipePosY = j;
+
+                }
+                if (piranhaPosY == pipePosY) {
+                    System.out.println("In the pipe");
+                    inPipe = true;
+                }
+                if (enemies[i][j] == 8 && !inPipe) {
+                    System.out.println("Hello there");
+                    return true;
+                }
+            }
+            piranhaPosY = 0;
+            pipePosY = -1;
+            inPipe = false;
+        }
+        return false;
+    }
+
 
     public void checkforJump(int[][] scene, int[][] enemies) {
         if (enemyInFront(enemies) || thereIsHole(scene) || thereIsObstacle(scene)) {
@@ -102,12 +132,25 @@ public class StateMachine {
         }
     }
 
+    public void printState() {
+        if (currentState == State.RUN)
+            System.out.println("Current state is RUN");
+        else if (currentState == State.WAIT)
+            System.out.println("Current state is WAIT");
+        else if (currentState == State.WALK)
+            System.out.println("Current state is WALK");
+        else if (currentState == State.WALKBACK)
+            System.out.println("Current state is WALKBACK");
+        else
+            System.out.println("Current state is JUMP");
+    }
+
     public void updateState(MarioForwardModel model, MarioTimer timer) {
         int[][] scene = model.getMarioSceneObservation(1);
         int[][] enemies = model.getMarioEnemiesObservation();
         float[] position = model.getMarioFloatPos();
 
-        currentYPosition = position[1];
+        currentYPosition = position[0];
 
         if (moveBack) {
             currentState = State.WALKBACK;
@@ -118,6 +161,8 @@ public class StateMachine {
                 moveBackCounter = 0;
                 currentState = State.JUMP;
             }
+
+            printState();
 
             return;
         }
@@ -137,6 +182,14 @@ public class StateMachine {
             previousState = currentState;
             previousYPosition = currentYPosition;
 
+            printState();
+
+            return;
+        }
+
+        if (piranhaOnScreen(scene, enemies)) {
+            currentState = State.WAIT;
+            printState();
             return;
         }
 
@@ -145,8 +198,7 @@ public class StateMachine {
             System.out.println(rand);
             if (rand <= 0.60) {
                 currentState = State.RUN;
-            }
-            else {
+            } else {
                 currentState = State.WALK;
                 groundWalk = true;
             }
@@ -154,9 +206,10 @@ public class StateMachine {
 
         checkforJump(scene, enemies);
 
+
         if (previousYPosition != 0 && previousYPosition == currentYPosition && ((previousState == State.WALK) || (previousState == State.RUN))) {
             stuckCounter++;
-            if (stuckCounter == 10) {
+            if (stuckCounter == 5) {
                 moveBack = true;
                 System.out.println("Hello I am stuck");
                 stuckCounter = 0;
@@ -166,16 +219,6 @@ public class StateMachine {
         previousState = currentState;
         previousYPosition = currentYPosition;
 
-        if (currentState == State.RUN)
-            System.out.println("Current state is RUN");
-        else if (currentState == State.WAIT)
-            System.out.println("Current state is WAIT");
-        else if (currentState == State.WALK)
-            System.out.println("Current state is WALK");
-        else if (currentState == State.WALKBACK)
-            System.out.println("Current state is WALKBACK");
-        else
-            System.out.println("Current state is JUMP");
-
+        printState();
     }
 }
