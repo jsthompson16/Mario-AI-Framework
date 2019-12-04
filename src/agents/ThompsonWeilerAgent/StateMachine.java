@@ -11,12 +11,13 @@ public class StateMachine {
 
     State currentState = State.RUN;
     State previousState;
+    float currentYPosition;
+    float previousYPosition = 0;
     boolean groundRun = false;
     boolean groundWalk = false;
-    boolean jumpBack = false;
+    int stuckCounter = 0;
     int groundRunCounter = 0;
     int groundWalkCounter = 0;
-    int jumpBackCounter = 0;
     int continuousJumpCounter = 0;
 
     public boolean[] getNextAction(MarioForwardModel model, MarioTimer timer) {
@@ -76,24 +77,9 @@ public class StateMachine {
         return true;
     }
 
-    private boolean thereIsPipe(int[][] scene) {
-        int temp;
-        for (int i = 0; i > -2; i--) {
-            for (int j = 1; j < 2; j++) {
-                temp = getLocation(i, j, scene);
-                System.out.println(temp);
-                if (temp == 17) {
-                    return true;
-                }
-            }
-        }
-
-        return false;
-    }
-
     private boolean enemyInFront(int[][] enemies) {
         for (int i = 0; i > -2; i--) {
-            for (int j = 1; j < 2; j++) {
+            for (int j = 1; j < 4; j++) {
                 if (getLocation(j, i, enemies) > 1) {
                     return true;
                 }
@@ -110,7 +96,6 @@ public class StateMachine {
                 continuousJumpCounter++;
                 if (continuousJumpCounter == 4) {
                     currentState = State.WAIT;
-                    //jumpBack = true;
                     continuousJumpCounter = 0;
                 }
             }
@@ -120,18 +105,9 @@ public class StateMachine {
     public void updateState(MarioForwardModel model, MarioTimer timer) {
         int[][] scene = model.getMarioSceneObservation(1);
         int[][] enemies = model.getMarioEnemiesObservation();
+        float[] position = model.getMarioFloatPos();
 
-        if (jumpBack) {
-            currentState = State.JUMPBACK;
-            jumpBackCounter++;
-
-            if (jumpBackCounter == 3) {
-                jumpBack = false;
-                jumpBackCounter = 0;
-            }
-
-            return;
-        }
+        currentYPosition = position[1];
 
         if (groundRun) {
             currentState = State.RUN;
@@ -154,7 +130,7 @@ public class StateMachine {
 
             if (currentState == State.WALK) {
                 groundWalkCounter++;
-                if (groundWalkCounter == 9) {
+                if (groundWalkCounter == 6) {
                     groundWalk = false;
                     groundWalkCounter = 0;
                 }
@@ -168,15 +144,27 @@ public class StateMachine {
             System.out.println(rand);
             if (rand <= 0.60) {
                 currentState = State.RUN;
+                //groundRun = true;
             }
             else {
                 currentState = State.WALK;
+                //groundWalk = true;
             }
         }
 
         checkforJump(scene, enemies);
 
+        if (previousYPosition != 0 && previousYPosition == currentYPosition && ((previousState == State.WALK) || (previousState == State.RUN))) {
+            stuckCounter++;
+            if (stuckCounter == 2) {
+                System.out.println("Hello i am here");
+                currentState = State.JUMP;
+                stuckCounter = 0;
+            }
+        }
+
         previousState = currentState;
+        previousYPosition = currentYPosition;
 
         if (currentState == State.RUN)
             System.out.println("Current state is RUN");
