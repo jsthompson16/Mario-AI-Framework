@@ -11,8 +11,8 @@ public class StateMachine {
 
     State currentState = State.RUN;
     State previousState;
-    float currentXPosition;
-    float previousXPosition = 0;
+    int currentXPosition;
+    int previousXPosition = 0;
     boolean groundWalk = false;
     boolean moveBack = false;
     int moveBackCounter = 0;
@@ -61,7 +61,6 @@ public class StateMachine {
                 return true;
             }
         }
-
         return false;
     }
 
@@ -78,7 +77,7 @@ public class StateMachine {
     }
 
     private boolean enemyInFront(int[][] enemies) {
-        for (int i = 0; i > -2; i--) {
+        for (int i = 0; i > -1; i--) {
             for (int j = -2; j < 4; j++) {
                 if (getLocation(j, i, enemies) > 1) {
                     return true;
@@ -148,7 +147,7 @@ public class StateMachine {
         int[][] enemies = model.getMarioEnemiesObservation();
         float[] position = model.getMarioFloatPos();
 
-        currentXPosition = position[0];
+        currentXPosition = (int)position[0];
 
         if (moveBack) {
             currentState = State.WALKBACK;
@@ -188,7 +187,7 @@ public class StateMachine {
         if (piranhaOnScreen(scene, enemies)) {
             currentState = State.WAIT;
 
-            if (enemyBehind(enemies))
+            if (enemyBehind(enemies) || enemyInFront(enemies))
                 currentState = State.JUMP;
 
             printState();
@@ -196,18 +195,10 @@ public class StateMachine {
         }
 
         if (model.isMarioOnGround()) {
-            double rand = Math.random();
-            System.out.println(rand);
-            if (rand <= 0.60) {
-                currentState = State.RUN;
-            } else {
-                currentState = State.WALK;
-                groundWalk = true;
-            }
+            currentState = State.WALK;
         }
 
         checkforJump(scene, enemies);
-
 
         if (previousXPosition != 0 && previousXPosition == currentXPosition && ((previousState == State.WALK) || (previousState == State.RUN))) {
             stuckCounter++;
@@ -215,7 +206,6 @@ public class StateMachine {
                 currentState = State.JUMP;
             if (stuckCounter == 5) {
                 moveBack = true;
-                System.out.println("Hello I am stuck");
                 stuckCounter = 0;
             }
         }

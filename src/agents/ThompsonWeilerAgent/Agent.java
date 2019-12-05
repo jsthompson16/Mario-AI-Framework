@@ -5,9 +5,6 @@ import engine.core.MarioForwardModel;
 import engine.core.MarioTimer;
 import engine.helper.MarioActions;
 
-import java.util.ArrayList;
-import java.util.Random;
-
 public class Agent implements MarioAgent {
     private boolean action[];
     private StateMachine machine;
@@ -26,6 +23,6 @@ public class Agent implements MarioAgent {
 
     @Override
     public String getAgentName() {
-        return "DoNothingAgent";
+        return "ThompsonWeilerAgent";
     }
 }
