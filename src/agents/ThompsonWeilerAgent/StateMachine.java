@@ -11,8 +11,8 @@ public class StateMachine {
 
     State currentState = State.RUN;
     State previousState;
-    float currentYPosition;
-    float previousYPosition = 0;
+    float currentXPosition;
+    float previousXPosition = 0;
     boolean groundWalk = false;
     boolean moveBack = false;
     int moveBackCounter = 0;
@@ -88,8 +88,19 @@ public class StateMachine {
         return false;
     }
 
+    private boolean enemyBehind(int[][] enemies) {
+        for (int i = 0; i > -2; i--) {
+            for (int j = -2; j < 1; j++) {
+                if (getLocation(j, i, enemies) > 1) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
     private boolean piranhaOnScreen(int[][] scene, int[][] enemies) {
-        for (int i = 0; i < scene.length; i++) {
+        for (int i = 8; i < scene.length; i++) {
             for (int j = 0; j < scene[i].length; j++) {
                 if (scene[i][j] == 34) {
                     if (enemies[i][j-1] == 8) {
@@ -111,7 +122,7 @@ public class StateMachine {
 
             if (previousState == State.JUMP) {
                 continuousJumpCounter++;
-                if (continuousJumpCounter == 8) {
+                if (continuousJumpCounter == 10) {
                     currentState = State.WAIT;
                     continuousJumpCounter = 0;
                 }
@@ -137,13 +148,13 @@ public class StateMachine {
         int[][] enemies = model.getMarioEnemiesObservation();
         float[] position = model.getMarioFloatPos();
 
-        currentYPosition = position[0];
+        currentXPosition = position[0];
 
         if (moveBack) {
             currentState = State.WALKBACK;
             moveBackCounter++;
 
-            if (moveBackCounter == 5) {
+            if (moveBackCounter == 8) {
                 moveBack = false;
                 moveBackCounter = 0;
                 currentState = State.JUMP;
@@ -167,7 +178,7 @@ public class StateMachine {
             }
 
             previousState = currentState;
-            previousYPosition = currentYPosition;
+            previousXPosition = currentXPosition;
 
             printState();
 
@@ -176,6 +187,10 @@ public class StateMachine {
 
         if (piranhaOnScreen(scene, enemies)) {
             currentState = State.WAIT;
+
+            if (enemyBehind(enemies))
+                currentState = State.JUMP;
+
             printState();
             return;
         }
@@ -194,8 +209,10 @@ public class StateMachine {
         checkforJump(scene, enemies);
 
 
-        if (previousYPosition != 0 && previousYPosition == currentYPosition && ((previousState == State.WALK) || (previousState == State.RUN))) {
+        if (previousXPosition != 0 && previousXPosition == currentXPosition && ((previousState == State.WALK) || (previousState == State.RUN))) {
             stuckCounter++;
+            if (stuckCounter == 3)
+                currentState = State.JUMP;
             if (stuckCounter == 5) {
                 moveBack = true;
                 System.out.println("Hello I am stuck");
@@ -204,7 +221,7 @@ public class StateMachine {
         }
 
         previousState = currentState;
-        previousYPosition = currentYPosition;
+        previousXPosition = currentXPosition;
 
         printState();
     }
