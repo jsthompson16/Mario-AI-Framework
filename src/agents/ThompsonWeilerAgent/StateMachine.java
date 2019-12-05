@@ -13,11 +13,9 @@ public class StateMachine {
     State previousState;
     int currentXPosition;
     int previousXPosition = 0;
-    boolean groundWalk = false;
     boolean moveBack = false;
     int moveBackCounter = 0;
     int stuckCounter = 0;
-    int groundWalkCounter = 0;
     int continuousJumpCounter = 0;
 
     public boolean[] getNextAction(MarioForwardModel model, MarioTimer timer) {
@@ -158,26 +156,6 @@ public class StateMachine {
                 moveBackCounter = 0;
                 currentState = State.JUMP;
             }
-
-            printState();
-
-            return;
-        }
-
-        if (groundWalk) {
-            currentState = State.WALK;
-            checkforJump(scene, enemies);
-
-            if (currentState == State.WALK) {
-                groundWalkCounter++;
-                if (groundWalkCounter == 3) {
-                    groundWalk = false;
-                    groundWalkCounter = 0;
-                }
-            }
-
-            previousState = currentState;
-            previousXPosition = currentXPosition;
 
             printState();
 
