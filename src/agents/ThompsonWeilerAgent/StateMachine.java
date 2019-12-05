@@ -4,12 +4,12 @@ import engine.core.MarioForwardModel;
 import engine.core.MarioTimer;
 
 enum State {
-    RUN, JUMP, WAIT, WALK, WALKBACK
+    JUMP, WAIT, WALK, WALKBACK
 }
 
 public class StateMachine {
 
-    State currentState = State.RUN;
+    State currentState = State.WALK;
     State previousState;
     int currentXPosition;
     int previousXPosition = 0;
@@ -26,9 +26,6 @@ public class StateMachine {
         switch(currentState) {
             case JUMP:
                 action = new boolean[] {false, true, false, true, true};
-                break;
-            case RUN:
-                action = new boolean[] {false, true, false, true, false};
                 break;
             case WAIT:
                 action = new boolean[] {false, false, false, false, false};
@@ -128,9 +125,7 @@ public class StateMachine {
     }
 
     public void printState() {
-        if (currentState == State.RUN)
-            System.out.println("Current state is RUN");
-        else if (currentState == State.WAIT)
+        if (currentState == State.WAIT)
             System.out.println("Current state is WAIT");
         else if (currentState == State.WALK)
             System.out.println("Current state is WALK");
@@ -178,7 +173,7 @@ public class StateMachine {
 
         checkforJump(scene, enemies);
 
-        if (previousXPosition != 0 && previousXPosition == currentXPosition && ((previousState == State.WALK) || (previousState == State.RUN))) {
+        if (previousXPosition != 0 && previousXPosition == currentXPosition && previousState == State.WALK) {
             stuckCounter++;
             if (stuckCounter == 3)
                 currentState = State.JUMP;
